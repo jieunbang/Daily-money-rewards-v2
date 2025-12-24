@@ -524,13 +524,14 @@
       inherits: false;
     }
 
+
     /* Card Back (결과 카드) */
     .card-back {
       position: absolute;
       width: 100%;
       height: 100%;
       background: #d5d5d5;
-      border-radius: 16px;
+      border-radius: 12px;
       padding: 28px 18px 24px;
       display: flex;
       flex-direction: column;
@@ -929,6 +930,16 @@
       border-color: #3b82f6;
       color: #fff;
     }
+
+    .demo-label {
+      display: block;
+      padding: 8px 0 4px 0;
+      color: #999;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: 'Pretendard', sans-serif;
+      margin-bottom: 4px;
+    }
   </style>
 </head>
 <body>
@@ -1096,9 +1107,13 @@
   </div>
 
   <!-- Demo Controls -->
+  <div class="demo-label">한번에 열기 시나리오 테스트</div>
   <div class="demo-controls-external">
     <button class="demo-btn active" onclick="setScenario('success')">성공 시나리오</button>
     <button class="demo-btn" onclick="setScenario('partial')">일부 실패</button>
+    <button class="demo-btn" onclick="setOpenAllScenario('all-normal')">한번에 열기 - 모두 일반</button>
+    <button class="demo-btn" onclick="setOpenAllScenario('with-special')">한번에 열기 - 스페셜 포함</button>
+    <button class="demo-btn" onclick="setOpenAllScenario('special-front')">한번에 열기 - 스페셜 카드가 맨 앞</button>
     <button class="demo-btn" onclick="resetDemo()">초기화</button>
   </div>
 
@@ -1180,6 +1195,155 @@
       currentScenario = scenario;
       document.querySelectorAll('.demo-controls-external .demo-btn').forEach(btn => btn.classList.remove('active'));
       event.target.classList.add('active');
+    }
+
+    function setOpenAllScenario(scenario) {
+      // 모든 버튼 비활성화
+      document.querySelectorAll('.demo-controls-external .demo-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      // 카드 상태 초기화
+      currentCardIndex = 3;
+      totalMoney = 0;
+      isProcessing = false;
+      
+      // 모든 카드 초기화
+      for (let i = 1; i <= 3; i++) {
+        const card = document.getElementById('card' + i);
+        if (!card) continue;
+        
+        // 모든 클래스 제거
+        card.classList.remove('special', 'hidden', 'move-front', 'move-back', 'flipping', 'press-flip', 'merge', 'bounce', 'border-loading', 'merge-flip');
+        
+        // 스타일 초기화 및 기본 위치 설정
+        card.style.cssText = '';
+        card.style.visibility = 'visible';
+        card.style.opacity = '1';
+        
+        // 기본 위치로 복원 (CSS nth-child 규칙에 따라)
+        if (i === 1) {
+          // 맨 뒤 카드 (숨김)
+          card.style.transform = 'translate(-50%, -50%) translateX(6px) translateY(-5px) rotate(8deg)';
+          card.style.zIndex = '1';
+          card.style.opacity = '0';
+        } else if (i === 2) {
+          // 뒷장 (보임, 8도 기울기)
+          card.style.transform = 'translate(-50%, -50%) translateX(6px) translateY(-5px) rotate(8deg)';
+          card.style.zIndex = '2';
+          card.style.opacity = '1';
+        } else if (i === 3) {
+          // 맨 앞장 (보임, 0도)
+          card.style.transform = 'translate(-50%, -50%) translateX(0) translateY(0) rotate(0deg)';
+          card.style.zIndex = '3';
+          card.style.opacity = '1';
+        }
+        
+        // 카드 앞면 초기화
+        const cardFront = card.querySelector('.card-front');
+        if (cardFront) {
+          cardFront.classList.remove('card-front-special');
+        }
+        
+        // 카드 뒷면 초기화
+        const cardBack = card.querySelector('.card-back');
+        if (cardBack) {
+          cardBack.classList.remove('card-back-special');
+          cardBack.style.visibility = 'visible';
+          const badge = cardBack.querySelector('.result-badge');
+          const amount = cardBack.querySelector('.result-amount');
+          const text = cardBack.querySelector('.result-text');
+          if (badge) badge.textContent = 'REWARD';
+          if (amount) amount.textContent = '20원';
+          if (text) text.innerHTML = '상품 구매 시<br>바로 사용할 수 있어요';
+        }
+      }
+      
+      // 시나리오에 따라 카드 타입 설정
+      if (scenario === 'all-normal') {
+        // 모든 카드를 일반 카드로 설정
+        for (let i = 1; i <= 3; i++) {
+          const card = document.getElementById('card' + i);
+          if (card) {
+            card.classList.remove('special');
+            const cardFront = card.querySelector('.card-front');
+            const cardBack = card.querySelector('.card-back');
+            if (cardFront) cardFront.classList.remove('card-front-special');
+            if (cardBack) cardBack.classList.remove('card-back-special');
+          }
+        }
+        specialCount = 0;
+        mileageCount = 3;
+      } else if (scenario === 'with-special') {
+        // card2를 스페셜 카드로 설정
+        const card2 = document.getElementById('card2');
+        if (card2) {
+          card2.classList.add('special');
+          const cardFront = card2.querySelector('.card-front');
+          const cardBack = card2.querySelector('.card-back');
+          if (cardFront) cardFront.classList.add('card-front-special');
+          if (cardBack) {
+            cardBack.classList.add('card-back-special');
+            const badge = cardBack.querySelector('.result-badge');
+            const amount = cardBack.querySelector('.result-amount');
+            if (badge) badge.textContent = 'SPECIAL';
+            if (amount) amount.textContent = '3,000원';
+          }
+        }
+        // card1, card3는 일반 카드
+        const card1 = document.getElementById('card1');
+        const card3 = document.getElementById('card3');
+        if (card1) card1.classList.remove('special');
+        if (card3) card3.classList.remove('special');
+        specialCount = 1;
+        mileageCount = 2;
+      } else if (scenario === 'special-front') {
+        // card3(맨 앞 카드)를 스페셜 카드로 설정
+        const card3 = document.getElementById('card3');
+        if (card3) {
+          card3.classList.add('special');
+          const cardFront = card3.querySelector('.card-front');
+          const cardBack = card3.querySelector('.card-back');
+          if (cardFront) cardFront.classList.add('card-front-special');
+          if (cardBack) {
+            cardBack.classList.add('card-back-special');
+            const badge = cardBack.querySelector('.result-badge');
+            const amount = cardBack.querySelector('.result-amount');
+            if (badge) badge.textContent = 'SPECIAL';
+            if (amount) amount.textContent = '3,000원';
+          }
+        }
+        // card1, card2는 일반 카드
+        const card1 = document.getElementById('card1');
+        const card2 = document.getElementById('card2');
+        if (card1) card1.classList.remove('special');
+        if (card2) card2.classList.remove('special');
+        specialCount = 1;
+        mileageCount = 2;
+      }
+      
+      // 카드 수 업데이트
+      updateCounts(specialCount, mileageCount);
+      
+      // 총 금액 초기화
+      totalMoneyEl.textContent = '0원';
+      
+      // 카드 스택 표시
+      cardStack.style.display = '';
+      
+      // Empty state 숨기기
+      emptyState.classList.remove('show', 'fade-in');
+      cardInfo.style.display = '';
+      document.getElementById('emptyInfo').classList.remove('show');
+      
+      // 버튼 상태 업데이트
+      updateButtonState();
+      
+      // 타이머 재시작
+      isTimerStopped = false;
+      const timeBadgeEl = document.getElementById('timeBadge');
+      timeBadgeEl.className = 'time-badge';
+      timeBadgeEl.textContent = '12:24:55 남음';
+      timeBadgeEl.onclick = null;
     }
 
     function showToast(message, duration = 2500, onComplete = null) {
@@ -1474,9 +1638,10 @@
       // 카드 합쳐지는 애니메이션 완료 대기
       await new Promise(r => setTimeout(r, 500));
 
-      // 3. merge 클래스 제거하고 바운스 애니메이션 준비 (맨 앞 카드만)
-      // 맨 앞 카드만 보더라이트와 바운스 애니메이션 적용
+      // 2. merge 클래스 제거하고 바운스 애니메이션 준비 (맨 앞 카드만)
+      // 맨 앞 카드만 보더라이트와 바운스 애니메이션 적용 (일반 카드처럼)
       const frontCardElement = document.getElementById('card' + frontCardIndex);
+      
       if (frontCardElement) {
         // merge 클래스 제거
         frontCardElement.classList.remove('merge');
@@ -1512,7 +1677,7 @@
         frontCardElement.style.animation = `${animationName} 1s cubic-bezier(0.45, 0, 0.55, 1) 2`;
         frontCardElement.style.animationFillMode = 'both';
         
-        // 보더 라이트 추가 (맨 앞 카드만)
+        // 보더 라이트 추가 (모든 경우)
         frontCardElement.classList.add('border-loading');
       }
       
@@ -1529,10 +1694,10 @@
         // 뒤 카드는 보이지 않도록 (맨 앞 카드가 덮고 있음)
       }
 
-      // 2초 동안 애니메이션 (1s × 2번)
+      // 2초 동안 바운스 애니메이션 (1s × 2번)
       await new Promise(r => setTimeout(r, 2000));
 
-      // 바운스 애니메이션 제거 및 플립 준비 (맨 앞 카드만)
+      // 바운스 애니메이션 제거
       if (frontCardElement) {
         // 동적 애니메이션 제거
         const animationName = frontCardElement.dataset.bounceAnimation;
@@ -1551,7 +1716,66 @@
         frontCardElement.style.transform = finalTargetTransform;
       }
       
-      await new Promise(r => setTimeout(r, 50));
+      // 스페셜 카드가 맨 앞일 때는 약간의 대기 시간을 주어 부드럽게 전환
+      const isSpecialFront = frontCardElement && frontCardElement.classList.contains('special');
+      if (isSpecialFront) {
+        // 보더라인 제거
+        frontCardElement.classList.remove('border-loading');
+        // 바운스 애니메이션 종료 후 약간의 안정화 시간
+        await new Promise(r => setTimeout(r, 200));
+      }
+      
+      // 2-1. 스페셜 카드로 변신 모션 (스페셜 카드가 있고 맨 앞 카드가 일반 카드인 경우)
+      if (frontCardElement && specialCount > 0 && !frontCardElement.classList.contains('special')) {
+        // 보더라이트 제거
+        frontCardElement.classList.remove('border-loading');
+        
+        // 바로 일반카드 > 스페셜카드 페이드인 (0.6초)
+        const cardFront = frontCardElement.querySelector('.card-front');
+        if (cardFront) {
+          // 페이드 오버레이 생성 (스페셜카드)
+          const overlay = document.createElement('div');
+          overlay.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('./images/card-special-front.png') center/cover no-repeat;
+            border-radius: 8px;
+            opacity: 0;
+            transform: scale(1.01);
+            pointer-events: none;
+            z-index: 1;
+          `;
+          cardFront.appendChild(overlay);
+          
+          // 스페셜카드 페이드인 시작 (0.6초) - transition 설정 후 opacity 변경
+          // 앞부분은 ease-in, 뒷부분은 ease-out
+          requestAnimationFrame(() => {
+            overlay.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.6, 1), transform 0.6s cubic-bezier(0.4, 0, 0.6, 1)';
+            requestAnimationFrame(() => {
+              overlay.style.opacity = '1';
+              overlay.style.transform = 'scale(1)';
+            });
+          });
+          
+          // 페이드 전환 완료 대기 (0.6초)
+          await new Promise(r => setTimeout(r, 600));
+          
+          // 스페셜 카드로 변경 (배경 이미지 교체) - 먼저 클래스 추가
+          frontCardElement.classList.add('special');
+          cardFront.classList.add('card-front-special');
+          
+          // 오버레이 제거 (페이드아웃 없이 바로 제거)
+          overlay.remove();
+        }
+      } else {
+        // 일반 카드인 경우 보더라인 제거만
+        if (frontCardElement) {
+          frontCardElement.classList.remove('border-loading');
+        }
+      }
 
       // 적립 금액 계산
       let totalEarned = 0;
@@ -1586,26 +1810,36 @@
           if (cardBack) {
             cardBack.style.visibility = 'hidden';
           }
+          // 뒤에 있는 카드들은 플립할 때 보이지 않도록 숨김
+          card.style.opacity = '0';
         }
       }
 
-      // 4. 합쳐진 카드 한번에 플립 (보더 라이트 제거) - 맨 앞 카드 위치 기준
+      // 4. 합쳐진 카드 한번에 플립 - 맨 앞 카드 위치 기준
       // 모든 카드가 플립되지만 실제로는 맨 앞 카드만 보임
       for (let i = 1; i <= currentCardIndex; i++) {
         const card = document.getElementById('card' + i);
         if (!card) continue;
         
-        // 보더라이트는 맨 앞 카드에서만 제거 (맨 앞 카드에만 있었음)
+        // 스페셜 카드가 맨 앞일 때는 더 부드러운 플립 전환
+        const isSpecialCard = card.classList.contains('special');
+        const flipDuration = isSpecialCard ? '0.8s' : '0.7s';
+        const flipEasing = isSpecialCard ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)';
+        
+        // 맨 앞 카드만 보이도록 z-index 설정
         if (i === frontCardIndex) {
-          card.classList.remove('border-loading');
+          // 맨 앞 카드는 가장 높은 z-index
+          card.style.zIndex = '10';
+        } else {
+          // 뒤에 있는 카드들은 낮은 z-index로 숨김
+          card.style.zIndex = '1';
         }
         
         // 모든 카드 플립 (맨 앞 카드만 보이지만 모든 카드가 플립됨)
-        card.style.transition = 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)';
+        card.style.transition = `transform ${flipDuration} ${flipEasing}`;
         // 맨 앞 카드의 위치를 유지하면서 rotateY만 180도로
         const flipTransform = finalTargetTransform.replace('rotateY(0deg)', 'rotateY(180deg)');
         card.style.transform = flipTransform;
-        card.style.zIndex = '10';
       }
 
       // 적립 처리 - 카드 플립 시작과 동시에 토스트 표시
@@ -1614,8 +1848,14 @@
 
       await new Promise(r => setTimeout(r, 800));
 
-      // 카드 수 0으로 (모든 카드 오픈)
-      updateCounts(0, 0);
+      // 일부 실패 케이스인 경우 1장 남기기
+      if (currentScenario === 'partial') {
+        // 1장 남기기
+        updateCounts(0, 1);
+      } else {
+        // 카드 수 0으로 (모든 카드 오픈)
+        updateCounts(0, 0);
+      }
       
       // 버튼을 "확인"으로 변경하고 활성화
       openAllBtn.classList.remove('loading');
@@ -1672,14 +1912,70 @@
         openAllBtn.disabled = true;
         openAllBtn.onclick = null;
       } else {
-        // 일부 실패: 플립된 상태 그대로 유지 + 알럿 제공
-        // 카드 수 일부 남김
-        updateCounts(specialCount, 2);
+        // 일부 실패: 1장만 남기고 나머지는 숨김
+        // 플립된 카드들 중 마지막 1장만 남기고 나머지는 숨김
+        for (let i = 1; i < pendingCardCount; i++) {
+          const card = document.getElementById('card' + i);
+          if (card) {
+            card.style.visibility = 'hidden';
+            card.style.opacity = '0';
+          }
+        }
         
-        // ★ 일부 실패 시에도 empty state 미리 보여줌
-        emptyState.classList.add('show');
+        // 마지막 카드만 보이도록 설정 (앞면으로 복원)
+        const lastCard = document.getElementById('card' + pendingCardCount);
+        if (lastCard) {
+          // 플립된 상태에서 앞면으로 복원 (기본 위치로)
+          lastCard.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+          lastCard.style.transform = 'translate(-50%, -50%) translateX(0) translateY(0) rotate(0deg) rotateY(0deg)';
+          lastCard.style.zIndex = '3';
+          lastCard.style.opacity = '1';
+          lastCard.style.visibility = 'visible';
+          
+          // 뒷면 초기화
+          const cardBack = lastCard.querySelector('.card-back');
+          if (cardBack) {
+            cardBack.style.visibility = 'visible';
+            cardBack.classList.remove('card-back-special');
+            const badge = cardBack.querySelector('.result-badge');
+            const amount = cardBack.querySelector('.result-amount');
+            const text = cardBack.querySelector('.result-text');
+            if (badge) badge.textContent = 'REWARD';
+            if (amount) amount.textContent = '20원';
+            if (text) text.innerHTML = '상품 구매 시<br>바로 사용할 수 있어요';
+          }
+          
+          // 앞면 초기화
+          const cardFront = lastCard.querySelector('.card-front');
+          if (cardFront) {
+            cardFront.classList.remove('card-front-special');
+            lastCard.classList.remove('special');
+          }
+        }
         
-        // 플립된 상태 유지한 채로 알럿 표시 (merge-flip 클래스 유지됨)
+        // 카드 수 1장 남김
+        updateCounts(0, 1);
+        currentCardIndex = pendingCardCount;
+        
+        // Empty state 숨기기
+        emptyState.classList.remove('show', 'fade-in');
+        document.getElementById('emptyInfo').classList.remove('show');
+        cardInfo.style.display = '';
+        
+        // 카드 정보 텍스트 복원
+        document.getElementById('infoLabel').textContent = '출석체크 리워드 | 11.04';
+        const timeBadgeEl = document.getElementById('timeBadge');
+        timeBadgeEl.className = 'time-badge';
+        timeBadgeEl.textContent = '12:24:55 남음';
+        timeBadgeEl.onclick = null;
+        isTimerStopped = false;
+        
+        // 버튼 상태 업데이트
+        openAllBtn.textContent = '카드열기';
+        openAllBtn.disabled = false;
+        openAllBtn.onclick = openSingleCard;
+        
+        // 알럿 표시
         showModal();
       }
 

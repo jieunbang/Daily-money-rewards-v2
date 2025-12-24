@@ -1771,7 +1771,7 @@
           overlay.remove();
         }
       } else {
-        // 일반 카드인 경우 보더라인 제거만
+        // 일반 카드인 경우 보더라인 제거
         if (frontCardElement) {
           frontCardElement.classList.remove('border-loading');
         }
@@ -1821,9 +1821,9 @@
         const card = document.getElementById('card' + i);
         if (!card) continue;
         
-        // 스페셜 카드가 맨 앞일 때는 더 부드러운 플립 전환
+        // 스페셜 카드가 맨 앞일 때는 더 부드러운 플립 전환 (더 길게)
         const isSpecialCard = card.classList.contains('special');
-        const flipDuration = isSpecialCard ? '0.8s' : '0.7s';
+        const flipDuration = isSpecialCard ? '1.0s' : '0.7s';
         const flipEasing = isSpecialCard ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)';
         
         // 맨 앞 카드만 보이도록 z-index 설정
@@ -1836,7 +1836,17 @@
         }
         
         // 모든 카드 플립 (맨 앞 카드만 보이지만 모든 카드가 플립됨)
+        // transition을 먼저 설정
         card.style.transition = `transform ${flipDuration} ${flipEasing}`;
+      }
+      
+      // transition 설정 후 약간의 지연을 두고 transform을 적용하여 애니메이션이 재생되도록
+      await new Promise(r => setTimeout(r, 10));
+      
+      for (let i = 1; i <= currentCardIndex; i++) {
+        const card = document.getElementById('card' + i);
+        if (!card) continue;
+        
         // 맨 앞 카드의 위치를 유지하면서 rotateY만 180도로
         const flipTransform = finalTargetTransform.replace('rotateY(0deg)', 'rotateY(180deg)');
         card.style.transform = flipTransform;

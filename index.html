@@ -29,16 +29,43 @@
     .device-frame {
       width: 375px;
       height: 812px;
-      background-color: #080810;
-      background-image: url('./images/bg.png');
-      background-position: center center;
-      background-size: cover;
-      background-repeat: no-repeat;
-      overflow: hidden;
+      background: linear-gradient(180deg, #000000 0%, #26304b 100%);
+      overflow: clip;
       position: relative;
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
+    }
+
+    /* 배경 그래픽 레이어 */
+    .bg-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-layer .bg-image {
+      position: absolute;
+      width: 730px;
+      height: 864px;
+      left: -177px;
+      top: -50px;
+      object-fit: cover;
+    }
+
+    .bg-layer .bg-blur {
+      position: absolute;
+      width: 180px;
+      height: 280px;
+      left: 114px;
+      top: 332px;
+      background: #000;
+      filter: blur(25px);
+      opacity: 0.8;
     }
 
     /* ========== Status Bar ========== */
@@ -232,17 +259,16 @@
     .card-badges {
       display: flex;
       justify-content: center;
-      margin-bottom: 0;
+      margin-bottom: 24px;
     }
 
     .badge-container {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      width: 148px;
       padding: 4px 12px;
-      background: rgba(60, 60, 70, 0.6);
-      border-radius: 18px;
+      background: #1b202f;
+      border-radius: 100px;
     }
 
     .badge-label {
@@ -259,9 +285,8 @@
 
     .badge-divider {
       width: 1px;
-      height: 12px;
+      height: 9px;
       background: rgba(255, 255, 255, 0.2);
-      margin: 0 2px;
     }
 
     .badge-item {
@@ -269,32 +294,42 @@
       align-items: center;
       gap: 4px;
     }
-
-    .badge-icon {
-      width: 20px;
-      height: 24px;
-      border-radius: 5px;
+    
+    .badge-items {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 700;
-      color: #fff;
+      gap: 8px;
+    }
+
+    .badge-icon {
+      width: 15px;
+      height: 20px;
+      min-width: 15px;
+      min-height: 20px;
+      flex-shrink: 0;
+      border-radius: 1px;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      font-size: 0;
+      color: transparent;
     }
 
     .badge-icon.special {
-      background: linear-gradient(135deg, #7eb4ff 0%, #4a8cff 100%);
+      background-image: url('./images/card_list_special.png');
     }
 
     .badge-icon.mileage {
-      background: #4a4a55;
+      background-image: url('./images/card_list_default.png');
     }
 
     .badge-count {
       font-family: 'Pretendard', sans-serif;
       font-size: 12px;
-      font-weight: 700;
-      color: #fff;
+      font-weight: 400;
+      color: #e0e0e0;
+      line-height: 1.2;
+      letter-spacing: -0.24px;
     }
 
     /* ========== Card Wrapper ========== */
@@ -302,6 +337,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+      gap: 24px;
       width: 100%;
       overflow: visible;
       position: relative;
@@ -316,9 +352,9 @@
       justify-content: center;
       position: relative;
       width: 100%;
-      flex: 1;
-      padding-top: 32px;
-      min-height: 320px;
+      flex: 0 0 auto;
+      padding-top: 16px;
+      height: 332px;
     }
 
     /* Card Stack */
@@ -525,109 +561,141 @@
     }
 
 
-    /* Card Back (결과 카드) */
+    /* Card Back (결과 카드) - 일반 카드 뒷면 */
     .card-back {
       position: absolute;
       width: 100%;
       height: 100%;
-      background: #d5d5d5;
+      background: url('./images/card-front_back.png') center/cover no-repeat;
       border-radius: 12px;
-      padding: 28px 18px 24px;
+      border: none;
+      padding: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
       backface-visibility: hidden;
       transform: rotateY(180deg);
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    /* 콘텐츠 영역: 피그마 기준 width:162px, 세로중앙 */
+    .card-back .result-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 162px;
+    }
+
+    /* REWARD 뱃지: 피그마 기준 */
+    .card-back .result-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #050a1a;
+      color: #fff;
+      height: 14px;
+      padding: 0 5.5px;
+      border-radius: 2px;
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 12.776px;
+      letter-spacing: 0;
+      white-space: nowrap;
+      margin-bottom: 18px;
+    }
+
+    /* 금액+서브텍스트 묶음: 피그마 기준 gap:8px */
+    .card-back .result-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      margin-bottom: 0;
+    }
+
+    /* 금액: 피그마 기준 28px SemiBold */
+    .card-back .result-amount {
+      font-size: 28px;
+      font-weight: 600;
+      color: #000;
+      line-height: 1.3;
+      text-align: center;
+      margin: 0;
+    }
+
+    /* 서브텍스트: 피그마 기준 13px Regular #666 */
+    .card-back .result-text {
+      font-size: 13px;
+      font-weight: 400;
+      color: #666;
+      line-height: 1.3;
+      text-align: center;
+      margin: 0;
+    }
+
+    /* obj 이미지: 피그마 기준 100x100 */
+    .card-back .result-image {
+      width: 100px;
+      height: 100px;
+      min-width: 100px;
+      min-height: 100px;
+      background: url('./images/card-front_back_obj.png?v=2') center center no-repeat;
+      background-size: cover;
+      flex-shrink: 0;
+      margin-top: 0;
     }
 
     /* Special Card Back (스페셜 뒷면) */
     .card-back-special {
-      background: url('./images/card-special-back.png') center/cover no-repeat;
-      padding: 28px 18px 24px;
+      background: url('./images/card-special-front_back.png') center/cover no-repeat;
+      border: none;
     }
 
     .card-back-special .result-badge {
-      background: linear-gradient(135deg, #7eb4ff 0%, #4a8cff 100%);
+      background: linear-gradient(115.761deg, #399EFF 5.8655%, #7450FF 114.6%);
     }
 
     .card-back-special .result-amount,
     .card-back-special .result-text {
-      color: #333;
+      color: #000;
     }
 
     .card-back-special .result-image {
-      background: rgba(255, 255, 255, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-    }
-
-    .card-back .result-badge {
-      display: inline-block;
-      background: #222;
-      color: #fff;
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 700;
-      margin-top: 16px;
-      margin-bottom: 16px;
-      letter-spacing: 0.5px;
-    }
-
-    .card-back .result-amount {
-      font-size: 32px;
-      font-weight: 600;
-      color: #222;
-      margin-bottom: 4px;
-    }
-
-    .card-back .result-text {
-      font-size: 13px;
-      color: #666;
-      margin-top: 4px;
-      margin-bottom: 20px;
-      line-height: 1.4;
-      text-align: center;
-    }
-
-    .card-back .result-image {
-      width: 70px;
-      height: 70px;
-      background: #333;
-      margin-top: auto;
-      margin-bottom: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 12px;
-      font-weight: 500;
+      width: 100px;
+      height: 100px;
+      min-width: 100px;
+      min-height: 100px;
+      background: url('./images/card-special-front_back_obj.png') center center no-repeat;
+      background-size: 100% 100%;
     }
 
 
     /* Empty State */
     .empty-state {
-      text-align: center;
       display: none;
       width: 200px;
       height: 300px;
       min-height: 300px;
-      background: #6a6a6a;
-      border-radius: 16px;
-      padding: 40px 20px;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      background: url('./images/no%20rewards.png?v=2') center/cover no-repeat;
+      border-radius: 12px;
       flex-shrink: 0;
       position: absolute;
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
       z-index: 0;
+      overflow: hidden;
+      color: transparent;
+      font-size: 0;
+      padding: 0;
     }
 
     .empty-state.show {
-      display: flex;
+      display: block;
     }
 
     .empty-state.show.fade-in {
@@ -637,6 +705,10 @@
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
+    }
+
+    .empty-state * {
+      display: none !important;
     }
 
     .empty-state h3 {
@@ -705,11 +777,14 @@
     /* Empty Info - 카드 없을 때 하단 정보 */
     .empty-info {
       position: absolute;
-      top: 16px;
+      top: 0;
       left: 0;
       right: 0;
       text-align: center;
+      font-family: 'Pretendard', sans-serif;
       font-size: 14px;
+      font-weight: 400;
+      line-height: 1.2;
       color: #777;
       display: none;
     }
@@ -722,7 +797,8 @@
     .card-info-area {
       flex-shrink: 0;
       width: 100%;
-      padding: 16px 20px 32px;
+      padding: 0 20px 32px;
+      margin-top: 0;
       text-align: center;
       position: relative;
     }
@@ -761,7 +837,7 @@
       padding: 12px 16px;
       background: #fff;
       color: #000;
-      border-radius: 8px;
+      border-radius: 4px;
       font-family: 'Pretendard', sans-serif;
       font-size: 14px;
       font-weight: 500;
@@ -772,8 +848,9 @@
     }
 
     .btn-primary:disabled {
-      background: #333;
-      color: #666;
+      background: #f5f5f5;
+      border: 1px solid #ebebeb;
+      color: #ccc;
       cursor: not-allowed;
     }
 
@@ -820,12 +897,13 @@
       top: 156px;
       left: 50%;
       transform: translateX(-50%) translateY(-20px);
-      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-      color: #fff;
+      background: #fff;
+      color: #000;
       padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 13px;
+      border-radius: 100px;
+      font-size: 14px;
       font-weight: 500;
+      letter-spacing: -0.28px;
       display: inline-flex;
       justify-content: center;
       align-items: center;
@@ -891,7 +969,7 @@
       background: #fff;
       color: #000;
       border: none;
-      border-radius: 10px;
+      border-radius: 4px;
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
@@ -911,7 +989,7 @@
       padding: 10px 20px;
       background: #3a3a3a;
       border: 1px solid #4a4a4a;
-      border-radius: 8px;
+      border-radius: 4px;
       color: #999;
       font-size: 13px;
       font-weight: 500;
@@ -944,6 +1022,12 @@
 </head>
 <body>
   <div class="device-frame">
+    <!-- 배경 그래픽 레이어 -->
+    <div class="bg-layer">
+      <img src="./images/bg.png" alt="" class="bg-image">
+      <div class="bg-blur"></div>
+    </div>
+    
     <!-- ========== 상단 고정 영역 ========== -->
     <div class="top-fixed-area">
       <!-- Status Bar -->
@@ -1014,13 +1098,15 @@
           <div class="badge-container">
             <span class="badge-label">보유카드</span>
             <div class="badge-divider"></div>
-            <div class="badge-item">
-              <div class="badge-icon special">S</div>
-              <span class="badge-count" id="specialCount">1</span>
-            </div>
-            <div class="badge-item">
-              <div class="badge-icon mileage">M</div>
-              <span class="badge-count" id="mileageCount">2</span>
+            <div class="badge-items">
+              <div class="badge-item">
+                <div class="badge-icon special"></div>
+                <span class="badge-count" id="specialCount">1</span>
+              </div>
+              <div class="badge-item">
+                <div class="badge-icon mileage"></div>
+                <span class="badge-count" id="mileageCount">2</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1046,28 +1132,40 @@
             <div class="flip-card" id="card1">
               <div class="card-front"></div>
               <div class="card-back">
-                <div class="result-badge">REWARD</div>
-                <div class="result-amount">20원</div>
-                <div class="result-text">상품 구매 시<br>바로 사용할 수 있어요</div>
-                <div class="result-image">image</div>
+                <div class="result-content">
+                  <div class="result-badge">REWARD</div>
+                  <div class="result-info">
+                    <div class="result-amount">20원</div>
+                    <div class="result-text">상품 구매 시<br>바로 사용할 수 있어요</div>
+                  </div>
+                  <div class="result-image"></div>
+                </div>
               </div>
             </div>
             <div class="flip-card special" id="card2" data-card-type="special">
               <div class="card-front card-front-special"></div>
               <div class="card-back card-back-special">
-                <div class="result-badge">SPECIAL</div>
-                <div class="result-amount">3,000원</div>
-                <div class="result-text">상품 구매 시<br>바로 사용할 수 있어요</div>
-                <div class="result-image">image</div>
+                <div class="result-content">
+                  <div class="result-badge">SPECIAL</div>
+                  <div class="result-info">
+                    <div class="result-amount">3,000원</div>
+                    <div class="result-text">상품 구매 시<br>바로 사용할 수 있어요</div>
+                  </div>
+                  <div class="result-image"></div>
+                </div>
               </div>
             </div>
             <div class="flip-card" id="card3">
               <div class="card-front"></div>
               <div class="card-back">
-                <div class="result-badge">REWARD</div>
-                <div class="result-amount">20원</div>
-                <div class="result-text">상품 구매 시<br>바로 사용할 수 있어요</div>
-                <div class="result-image">image</div>
+                <div class="result-content">
+                  <div class="result-badge">REWARD</div>
+                  <div class="result-info">
+                    <div class="result-amount">20원</div>
+                    <div class="result-text">상품 구매 시<br>바로 사용할 수 있어요</div>
+                  </div>
+                  <div class="result-image"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -1111,8 +1209,8 @@
   <div class="demo-controls-external">
     <button class="demo-btn active" onclick="setScenario('success')">성공 시나리오</button>
     <button class="demo-btn" onclick="setScenario('partial')">일부 실패</button>
+    <button class="demo-btn" onclick="setOpenAllScenario('success')">한번에 열기 - 성공(스페셜 뒤)</button>
     <button class="demo-btn" onclick="setOpenAllScenario('all-normal')">한번에 열기 - 모두 일반</button>
-    <button class="demo-btn" onclick="setOpenAllScenario('with-special')">한번에 열기 - 스페셜 포함</button>
     <button class="demo-btn" onclick="setOpenAllScenario('special-front')">한번에 열기 - 스페셜 카드가 맨 앞</button>
     <button class="demo-btn" onclick="resetDemo()">초기화</button>
   </div>
@@ -1273,29 +1371,6 @@
         }
         specialCount = 0;
         mileageCount = 3;
-      } else if (scenario === 'with-special') {
-        // card2를 스페셜 카드로 설정
-        const card2 = document.getElementById('card2');
-        if (card2) {
-          card2.classList.add('special');
-          const cardFront = card2.querySelector('.card-front');
-          const cardBack = card2.querySelector('.card-back');
-          if (cardFront) cardFront.classList.add('card-front-special');
-          if (cardBack) {
-            cardBack.classList.add('card-back-special');
-            const badge = cardBack.querySelector('.result-badge');
-            const amount = cardBack.querySelector('.result-amount');
-            if (badge) badge.textContent = 'SPECIAL';
-            if (amount) amount.textContent = '3,000원';
-          }
-        }
-        // card1, card3는 일반 카드
-        const card1 = document.getElementById('card1');
-        const card3 = document.getElementById('card3');
-        if (card1) card1.classList.remove('special');
-        if (card3) card3.classList.remove('special');
-        specialCount = 1;
-        mileageCount = 2;
       } else if (scenario === 'special-front') {
         // card3(맨 앞 카드)를 스페셜 카드로 설정
         const card3 = document.getElementById('card3');
@@ -1317,6 +1392,29 @@
         const card2 = document.getElementById('card2');
         if (card1) card1.classList.remove('special');
         if (card2) card2.classList.remove('special');
+        specialCount = 1;
+        mileageCount = 2;
+      } else if (scenario === 'success') {
+        // 성공 시나리오: card2가 스페셜 카드 (기본 상태)
+        const card2 = document.getElementById('card2');
+        if (card2) {
+          card2.classList.add('special');
+          const cardFront = card2.querySelector('.card-front');
+          const cardBack = card2.querySelector('.card-back');
+          if (cardFront) cardFront.classList.add('card-front-special');
+          if (cardBack) {
+            cardBack.classList.add('card-back-special');
+            const badge = cardBack.querySelector('.result-badge');
+            const amount = cardBack.querySelector('.result-amount');
+            if (badge) badge.textContent = 'SPECIAL';
+            if (amount) amount.textContent = '3,000원';
+          }
+        }
+        // card1, card3는 일반 카드
+        const card1 = document.getElementById('card1');
+        const card3 = document.getElementById('card3');
+        if (card1) card1.classList.remove('special');
+        if (card3) card3.classList.remove('special');
         specialCount = 1;
         mileageCount = 2;
       }
@@ -1612,11 +1710,14 @@
         // 모든 상태 초기화
         card.classList.remove('hidden', 'merge', 'bounce', 'border-loading', 'press-flip', 'flipping', 'merge-flip', 'move-front', 'move-back');
         
-        // 카드 뒷면 초기화
+        // 카드 뒷면 초기화 (스페셜 카드는 클래스 유지)
         const cardBack = card.querySelector('.card-back');
         if (cardBack) {
           cardBack.style.visibility = 'visible';
-          cardBack.classList.remove('card-back-special');
+          // 스페셜 카드가 아닌 경우에만 card-back-special 클래스 제거
+          if (!card.classList.contains('special')) {
+            cardBack.classList.remove('card-back-special');
+          }
         }
         
         // 카드 상태 설정 - 앞면으로, 맨 앞 카드 위치로 합치기
@@ -1625,11 +1726,13 @@
         card.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
         card.style.transform = finalTargetTransform;
         
-        // z-index 설정: 맨 앞 카드가 가장 높고, 뒤로 갈수록 낮아짐
+        // z-index 설정: 맨 앞 카드가 가장 높고, 스페셜 카드는 일반 카드보다 높게
         if (i === frontCardIndex) {
-          card.style.zIndex = String(3 + currentCardIndex); // 맨 앞 카드가 가장 높음
+          card.style.zIndex = String(10); // 맨 앞 카드가 가장 높음
+        } else if (card.classList.contains('special')) {
+          card.style.zIndex = String(5); // 스페셜 카드는 일반 카드보다 높게
         } else {
-          card.style.zIndex = String(3 + (currentCardIndex - i)); // 뒤 카드는 낮은 z-index
+          card.style.zIndex = String(3 + (currentCardIndex - i)); // 일반 카드는 순서대로
         }
         
         card.classList.add('merge');
@@ -1723,53 +1826,6 @@
         frontCardElement.classList.remove('border-loading');
         // 바운스 애니메이션 종료 후 약간의 안정화 시간
         await new Promise(r => setTimeout(r, 200));
-      }
-      
-      // 2-1. 스페셜 카드로 변신 모션 (스페셜 카드가 있고 맨 앞 카드가 일반 카드인 경우)
-      if (frontCardElement && specialCount > 0 && !frontCardElement.classList.contains('special')) {
-        // 보더라이트 제거
-        frontCardElement.classList.remove('border-loading');
-        
-        // 바로 일반카드 > 스페셜카드 페이드인 (0.6초)
-        const cardFront = frontCardElement.querySelector('.card-front');
-        if (cardFront) {
-          // 페이드 오버레이 생성 (스페셜카드)
-          const overlay = document.createElement('div');
-          overlay.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('./images/card-special-front.png') center/cover no-repeat;
-            border-radius: 8px;
-            opacity: 0;
-            transform: scale(1.01);
-            pointer-events: none;
-            z-index: 1;
-          `;
-          cardFront.appendChild(overlay);
-          
-          // 스페셜카드 페이드인 시작 (0.6초) - transition 설정 후 opacity 변경
-          // 앞부분은 ease-in, 뒷부분은 ease-out
-          requestAnimationFrame(() => {
-            overlay.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.6, 1), transform 0.6s cubic-bezier(0.4, 0, 0.6, 1)';
-            requestAnimationFrame(() => {
-              overlay.style.opacity = '1';
-              overlay.style.transform = 'scale(1)';
-            });
-          });
-          
-          // 페이드 전환 완료 대기 (0.6초)
-          await new Promise(r => setTimeout(r, 600));
-          
-          // 스페셜 카드로 변경 (배경 이미지 교체) - 먼저 클래스 추가
-          frontCardElement.classList.add('special');
-          cardFront.classList.add('card-front-special');
-          
-          // 오버레이 제거 (페이드아웃 없이 바로 제거)
-          overlay.remove();
-        }
       } else {
         // 일반 카드인 경우 보더라인 제거
         if (frontCardElement) {
@@ -1786,12 +1842,17 @@
         }
       }
 
-      // 맨 앞 카드의 뒷면을 스페셜 카드 스타일로 변경하고 합산 금액 표시
+      // 맨 앞 카드의 뒷면에 합산 금액 표시 (1000원 이상이면 스페셜 뒷면, 미만이면 일반 뒷면)
       const actualFrontCard = document.getElementById('card' + frontCardIndex);
       if (actualFrontCard) {
         const frontCardBack = actualFrontCard.querySelector('.card-back');
         if (frontCardBack) {
-          frontCardBack.classList.add('card-back-special');
+          // 합산 금액에 따라 뒷면 스타일 결정
+          if (totalEarned >= 1000) {
+            frontCardBack.classList.add('card-back-special');
+          } else {
+            frontCardBack.classList.remove('card-back-special');
+          }
           const badge = frontCardBack.querySelector('.result-badge');
           const amount = frontCardBack.querySelector('.result-amount');
           const text = frontCardBack.querySelector('.result-text');
@@ -1922,8 +1983,7 @@
         openAllBtn.disabled = true;
         openAllBtn.onclick = null;
       } else {
-        // 일부 실패: 1장만 남기고 나머지는 숨김
-        // 플립된 카드들 중 마지막 1장만 남기고 나머지는 숨김
+        // 일부 실패: 1장만 남기고 나머지는 즉시 숨김 (애니메이션 없음)
         for (let i = 1; i < pendingCardCount; i++) {
           const card = document.getElementById('card' + i);
           if (card) {
@@ -1932,11 +1992,11 @@
           }
         }
         
-        // 마지막 카드만 보이도록 설정 (앞면으로 복원)
+        // 마지막 카드만 보이도록 설정 (앞면으로 즉시 복원, 애니메이션 없음)
         const lastCard = document.getElementById('card' + pendingCardCount);
         if (lastCard) {
-          // 플립된 상태에서 앞면으로 복원 (기본 위치로)
-          lastCard.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+          // 애니메이션 없이 즉시 앞면으로 복원
+          lastCard.style.transition = 'none';
           lastCard.style.transform = 'translate(-50%, -50%) translateX(0) translateY(0) rotate(0deg) rotateY(0deg)';
           lastCard.style.zIndex = '3';
           lastCard.style.opacity = '1';

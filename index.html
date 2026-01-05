@@ -1,0 +1,2060 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=375, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>매일머니받기 - 카드 한번에 열기</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #1a1a1a;
+      margin: 0;
+      padding: 20px 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .device-frame {
+      width: 375px;
+      height: 812px;
+      background: linear-gradient(180deg, #000000 0%, #26304b 100%);
+      overflow: clip;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    /* 배경 그래픽 레이어 */
+    .bg-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-layer .bg-image {
+      position: absolute;
+      width: 730px;
+      height: 864px;
+      left: -177px;
+      top: -50px;
+      object-fit: cover;
+    }
+
+    .bg-layer .bg-blur {
+      position: absolute;
+      width: 180px;
+      height: 280px;
+      left: 114px;
+      top: 332px;
+      background: #000;
+      filter: blur(25px);
+      opacity: 0.8;
+    }
+
+    /* ========== Status Bar ========== */
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 24px 10px;
+      background: #fff;
+      height: 44px;
+    }
+
+    .status-time {
+      font-size: 15px;
+      font-weight: 600;
+      color: #000;
+    }
+
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ========== Navigation ========== */
+    .nav-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px 12px;
+      background: #fff;
+      height: 44px;
+    }
+
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #000;
+      font-size: 17px;
+      font-weight: 400;
+      cursor: pointer;
+    }
+
+    .nav-back svg {
+      width: 10px;
+      height: 18px;
+    }
+
+    .nav-home {
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+    }
+
+    /* ========== Tab Menu ========== */
+    .tab-menu {
+      display: flex;
+      background: transparent;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      height: 48px;
+      width: 100%;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 5;
+    }
+
+    .tab-item {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: #666;
+      cursor: pointer;
+      position: relative;
+      font-weight: 500;
+    }
+
+    .tab-item.active {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .tab-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 56px;
+      height: 2px;
+      background: #fff;
+    }
+
+    /* ========== 상단 고정 영역 ========== */
+    .top-fixed-area {
+      flex-shrink: 0;
+      position: relative;
+      z-index: 20;
+    }
+
+    /* ========== 가변 영역 (카드 영역) ========== */
+    .flexible-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: visible;
+      position: relative;
+      min-height: 0;
+      z-index: 5;
+    }
+
+    /* ========== 하단 고정 영역 ========== */
+    .bottom-fixed-area {
+      flex-shrink: 0;
+    }
+
+    /* Background with blue glow */
+    .bg-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: transparent;
+      pointer-events: none;
+    }
+
+    .bg-glow {
+      display: none;
+    }
+
+    /* ========== Main Content ========== */
+    .main-content {
+      position: relative;
+      z-index: 5;
+      width: 100%;
+      padding: 32px 20px 0;
+      flex-shrink: 0;
+    }
+
+    /* Money Summary */
+    .money-summary {
+      text-align: center;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .money-summary .info-icon {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      opacity: 0.5;
+    }
+
+    .money-info h2 {
+      font-size: 14px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 6px;
+    }
+
+    .money-amount {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .money-amount span {
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      font-size: 26px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -1px;
+    }
+
+    .money-amount svg {
+      width: 20px;
+      height: 20px;
+      margin-left: 4px;
+      opacity: 0.5;
+    }
+
+    /* Card Count Badge */
+    .card-badges {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .badge-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: #1b202f;
+      border-radius: 100px;
+    }
+
+    .badge-label {
+      color: #E0E0E0;
+      text-align: center;
+      font-family: 'Pretendard', sans-serif;
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 120%;
+      letter-spacing: -0.24px;
+      white-space: nowrap;
+    }
+
+    .badge-divider {
+      width: 1px;
+      height: 9px;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .badge-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .badge-items {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-icon {
+      width: 15px;
+      height: 20px;
+      min-width: 15px;
+      min-height: 20px;
+      flex-shrink: 0;
+      border-radius: 1px;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      font-size: 0;
+      color: transparent;
+    }
+
+    .badge-icon.special {
+      background-image: url('./images/card_list_special.png');
+    }
+
+    .badge-icon.mileage {
+      background-image: url('./images/card_list_default.png');
+    }
+
+    .badge-count {
+      font-family: 'Pretendard', sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      color: #e0e0e0;
+      line-height: 1.2;
+      letter-spacing: -0.24px;
+    }
+
+    /* ========== Card Wrapper ========== */
+    .card-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      width: 100%;
+      overflow: visible;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* ========== Card Area ========== */
+    .card-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      width: 100%;
+      flex: 0 0 auto;
+      padding-top: 16px;
+      height: 332px;
+    }
+
+    /* Card Stack */
+    .card-stack {
+      position: relative;
+      width: 230px;
+      height: 320px;
+      perspective: 1000px;
+    }
+
+    /* Flip Card Container */
+    .flip-card {
+      position: absolute;
+      width: 200px;
+      height: 300px;
+      left: 50%;
+      top: 50%;
+      transform-style: preserve-3d;
+      transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+    }
+
+    /* 맨 뒤 카드 (숨김) */
+    .flip-card:nth-child(1) {
+      transform: translate(-50%, -50%) translateX(6px) translateY(-5px) rotate(8deg);
+      z-index: 1;
+      opacity: 0;
+    }
+
+    /* 뒷장 (보임, 8도 기울기) */
+    .flip-card:nth-child(2) {
+      transform: translate(-50%, -50%) translateX(6px) translateY(-5px) rotate(8deg);
+      z-index: 2;
+      opacity: 1;
+    }
+
+    /* 맨 앞장 (보임, 0도) */
+    .flip-card:nth-child(3) {
+      transform: translate(-50%, -50%) translateX(0) translateY(0) rotate(0deg);
+      z-index: 3;
+      opacity: 1;
+    }
+
+    /* 플립 상태 */
+    .flip-card.flipping {
+      transform: translate(-50%, -50%) translateY(0) rotateY(180deg);
+      z-index: 10;
+      transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* 카드 탭+플립 통합 애니메이션 */
+    @keyframes pressAndFlip {
+      0% {
+        transform: translate(-50%, -50%) scale(1) rotateY(0deg);
+      }
+      5% {
+        transform: translate(-50%, -50%) scale(0.88) rotateY(0deg);
+      }
+      12% {
+        transform: translate(-50%, -50%) scale(1.06) rotateY(0deg);
+      }
+      30% {
+        transform: translate(-50%, -50%) scale(1.03) rotateY(30deg);
+      }
+      45% {
+        transform: translate(-50%, -50%) scale(1.08, 1.02) rotateY(70deg);
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.12, 1) rotateY(90deg);
+      }
+      55% {
+        transform: translate(-50%, -50%) scale(1.08, 1.02) rotateY(110deg);
+      }
+      70% {
+        transform: translate(-50%, -50%) scale(1.02) rotateY(150deg);
+      }
+      85% {
+        transform: translate(-50%, -50%) scale(1.01) rotateY(175deg);
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1) rotateY(180deg);
+      }
+    }
+    
+    .flip-card.press-flip {
+      animation: pressAndFlip 0.75s cubic-bezier(0.4, 0, 0.7, 1) forwards;
+      z-index: 10;
+    }
+
+
+    /* 다음 카드가 앞으로 나오는 상태 */
+    .flip-card.move-front {
+      transform: translate(-50%, -50%) translateX(0) translateY(0) rotate(0deg) !important;
+      z-index: 3 !important;
+      opacity: 1 !important;
+    }
+
+    /* 대기 카드가 뒷장 위치로 오는 상태 */
+    .flip-card.move-back {
+      transform: translate(-50%, -50%) translateX(6px) translateY(-5px) rotate(8deg) !important;
+      z-index: 2 !important;
+      opacity: 1 !important;
+    }
+
+    .flip-card.hidden {
+      opacity: 0 !important;
+      pointer-events: none;
+    }
+
+    /* 카드 합쳐지는 상태 (한번에 열기) */
+    .flip-card.merge {
+      transform: translate(-50%, -50%) translateX(0) translateY(0) rotate(0deg) !important;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    /* 카드 스케일 바운스 애니메이션 (스무스하고 부드럽게) */
+    @keyframes cardScaleBounce {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.025); }
+    }
+
+    .flip-card.bounce {
+      animation: cardScaleBounce 1s cubic-bezier(0.45, 0, 0.55, 1) 2 !important;
+    }
+
+    /* 합쳐진 후 플립 */
+    .flip-card.merge-flip {
+      transform: translate(-50%, -50%) translateY(0) rotateY(180deg);
+      z-index: 10;
+      transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+
+    /* Card Front (일반 앞면) */
+    .card-front {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: url('./images/card-front.png') center/cover no-repeat;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      backface-visibility: hidden;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    /* Special Card Front (스페셜 앞면) */
+    .card-front-special {
+      background: url('./images/card-special-front.png') center/cover no-repeat;
+    }
+    
+    .card-front:active {
+      transform: scale(0.96);
+      transition: transform 0.1s ease-out;
+    }
+
+    /* 카드 보더 라이트 애니메이션 */
+    .card-front::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 8px;
+      padding: 2px;
+      background: linear-gradient(90deg, transparent, transparent);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .flip-card.border-loading .card-front::before {
+      opacity: 1;
+      background: conic-gradient(
+        from var(--border-angle, 0deg),
+        transparent 0deg,
+        transparent 60deg,
+        rgba(255, 255, 255, 0.9) 90deg,
+        rgba(120, 200, 255, 1) 120deg,
+        rgba(255, 255, 255, 0.9) 150deg,
+        transparent 180deg,
+        transparent 360deg
+      );
+      animation: borderRotate 1.5s linear infinite;
+    }
+
+    @keyframes borderRotate {
+      0% {
+        --border-angle: 0deg;
+      }
+      100% {
+        --border-angle: 360deg;
+      }
+    }
+
+    /* CSS custom property animation support */
+    @property --border-angle {
+      syntax: '<angle>';
+      initial-value: 0deg;
+      inherits: false;
+    }
+
+
+    /* Card Back (결과 카드) - 일반 카드 뒷면 */
+    .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: url('./images/card-front_back.png') center/cover no-repeat;
+      border-radius: 12px;
+      border: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      backface-visibility: hidden;
+      transform: rotateY(180deg);
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    /* 콘텐츠 영역: 피그마 기준 width:162px, 세로중앙 */
+    .card-back .result-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 162px;
+    }
+
+    /* REWARD 뱃지: 피그마 기준 */
+    .card-back .result-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #050a1a;
+      color: #fff;
+      height: 14px;
+      padding: 0 5.5px;
+      border-radius: 2px;
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 12.776px;
+      letter-spacing: 0;
+      white-space: nowrap;
+      margin-bottom: 18px;
+    }
+
+    /* 금액+서브텍스트 묶음: 피그마 기준 gap:8px */
+    .card-back .result-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      margin-bottom: 0;
+    }
+
+    /* 금액: 피그마 기준 28px SemiBold */
+    .card-back .result-amount {
+      font-size: 28px;
+      font-weight: 600;
+      color: #000;
+      line-height: 1.3;
+      text-align: center;
+      margin: 0;
+    }
+
+    /* 서브텍스트: 피그마 기준 13px Regular #666 */
+    .card-back .result-text {
+      font-size: 13px;
+      font-weight: 400;
+      color: #666;
+      line-height: 1.3;
+      text-align: center;
+      margin: 0;
+    }
+
+    /* obj 이미지: 피그마 기준 100x100 */
+    .card-back .result-image {
+      width: 100px;
+      height: 100px;
+      min-width: 100px;
+      min-height: 100px;
+      background: url('./images/card-front_back_obj.png?v=2') center center no-repeat;
+      background-size: cover;
+      flex-shrink: 0;
+      margin-top: 0;
+    }
+
+    /* Special Card Back (스페셜 뒷면) */
+    .card-back-special {
+      background: url('./images/card-special-front_back.png') center/cover no-repeat;
+      border: none;
+    }
+
+    .card-back-special .result-badge {
+      background: linear-gradient(115.761deg, #399EFF 5.8655%, #7450FF 114.6%);
+    }
+
+    .card-back-special .result-amount,
+    .card-back-special .result-text {
+      color: #000;
+    }
+
+    .card-back-special .result-image {
+      width: 100px;
+      height: 100px;
+      min-width: 100px;
+      min-height: 100px;
+      background: url('./images/card-special-front_back_obj.png') center center no-repeat;
+      background-size: 100% 100%;
+    }
+
+
+    /* Empty State */
+    .empty-state {
+      display: none;
+      width: 200px;
+      height: 300px;
+      min-height: 300px;
+      background: url('./images/no%20rewards.png?v=2') center/cover no-repeat;
+      border-radius: 12px;
+      flex-shrink: 0;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+      overflow: hidden;
+      color: transparent;
+      font-size: 0;
+      padding: 0;
+    }
+
+    .empty-state.show {
+      display: block;
+    }
+
+    .empty-state.show.fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .empty-state * {
+      display: none !important;
+    }
+
+    .empty-state h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 24px;
+    }
+
+    .empty-state .empty-image {
+      width: 80px;
+      height: 80px;
+      background: #444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .empty-state p {
+      display: none;
+    }
+
+    /* Card Info - 하단 정보 */
+    .card-info {
+      text-align: center;
+    }
+
+    .card-info .info-label {
+      font-size: 14px;
+      color: #777;
+      margin-bottom: 8px;
+    }
+
+    .card-info .time-badge {
+      display: inline-block;
+      background: rgba(30, 80, 180, 0.3);
+      color: rgba(56, 109, 255, 1);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .card-info .btn-tertiary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      color: #FFFFFF;
+      border: 1px solid #E0E0E0;
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .card-info .btn-tertiary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Empty Info - 카드 없을 때 하단 정보 */
+    .empty-info {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-family: 'Pretendard', sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.2;
+      color: #777;
+      display: none;
+    }
+
+    .empty-info.show {
+      display: block;
+    }
+
+    /* ========== Card Info Area (가변 패딩) ========== */
+    .card-info-area {
+      flex-shrink: 0;
+      width: 100%;
+      padding: 0 20px 32px;
+      margin-top: 0;
+      text-align: center;
+      position: relative;
+    }
+
+    /* ========== Bottom Area ========== */
+    .bottom-area {
+      background: transparent;
+      padding: 0 16px;
+      position: relative;
+      z-index: 10;
+      color: rgba(0, 0, 0, 0);
+    }
+
+    .bottom-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 12px 0 8px;
+    }
+
+    .btn {
+      width: 100%;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1 0 0;
+      padding: 12px 16px;
+      background: #fff;
+      color: #000;
+      border-radius: 4px;
+      font-family: 'Pretendard', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .btn-primary:hover {
+      background: #f5f5f5;
+    }
+
+    .btn-primary:disabled {
+      background: #f5f5f5;
+      border: 1px solid #ebebeb;
+      color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .btn-primary.loading {
+      flex-direction: row !important;
+      gap: 8px;
+    }
+
+    .btn-primary.loading .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #ddd;
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Home Indicator */
+    .home-indicator {
+      display: flex;
+      height: 34px;
+      padding: 21px 120px 8px 121px;
+      justify-content: center;
+      align-items: center;
+      align-self: stretch;
+      background: transparent;
+    }
+
+    .home-indicator-bar {
+      width: 134px;
+      height: 5px;
+      background: #fff;
+      border-radius: 3px;
+    }
+
+    /* ========== Toast ========== */
+    .toast {
+      position: absolute;
+      top: 156px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: #fff;
+      color: #000;
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: -0.28px;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 100;
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ========== Modal ========== */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .modal {
+      background: #1e1e1e;
+      border-radius: 16px;
+      padding: 28px 24px 20px;
+      width: 280px;
+      text-align: center;
+    }
+
+    .modal h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .modal p {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .modal .btn-modal {
+      width: 100%;
+      padding: 14px;
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+
+    /* ========== Demo Controls ========== */
+    .demo-controls-external {
+      display: flex;
+      gap: 10px;
+      padding: 12px 20px;
+      background: #2a2a2a;
+      border-radius: 12px;
+    }
+
+    .demo-controls-external .demo-btn {
+      padding: 10px 20px;
+      background: #3a3a3a;
+      border: 1px solid #4a4a4a;
+      border-radius: 4px;
+      color: #999;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Pretendard', sans-serif;
+    }
+
+    .demo-controls-external .demo-btn:hover {
+      background: #4a4a4a;
+      color: #fff;
+    }
+
+    .demo-controls-external .demo-btn.active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #fff;
+    }
+
+    .demo-label {
+      display: block;
+      padding: 8px 0 4px 0;
+      color: #999;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: 'Pretendard', sans-serif;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="device-frame">
+    <!-- 배경 그래픽 레이어 -->
+    <div class="bg-layer">
+      <img src="./images/bg.png" alt="" class="bg-image">
+      <div class="bg-blur"></div>
+    </div>
+    
+    <!-- ========== 상단 고정 영역 ========== -->
+    <div class="top-fixed-area">
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-icons">
+          <svg width="17" height="11" viewBox="0 0 17 11" fill="none">
+            <path d="M8.5 2C10.7 2 12.7 2.9 14.2 4.3L15.8 2.7C13.9 0.8 11.3 -0.3 8.5 -0.3C5.7 -0.3 3.1 0.8 1.2 2.7L2.8 4.3C4.3 2.9 6.3 2 8.5 2Z" fill="#000"/>
+            <path d="M8.5 5C9.9 5 11.2 5.5 12.2 6.3L13.8 4.7C12.4 3.5 10.5 2.7 8.5 2.7C6.5 2.7 4.6 3.5 3.2 4.7L4.8 6.3C5.8 5.5 7.1 5 8.5 5Z" fill="#000"/>
+            <path d="M8.5 8C9.2 8 9.9 8.3 10.4 8.8L8.5 10.7L6.6 8.8C7.1 8.3 7.8 8 8.5 8Z" fill="#000"/>
+          </svg>
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+            <rect x="0.5" y="0.5" width="21" height="11" rx="2.5" stroke="#000" stroke-opacity="0.35"/>
+            <rect x="23" y="3.5" width="1.5" height="5" rx="0.5" fill="#000" fill-opacity="0.4"/>
+            <rect x="2" y="2" width="18" height="8" rx="1.5" fill="#000"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="nav-header">
+        <div class="nav-back">
+          <svg viewBox="0 0 10 18" fill="none">
+            <path d="M9 1L1 9L9 17" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          매일머니받기
+        </div>
+        <svg class="nav-home" viewBox="0 0 24 24" fill="none">
+          <path d="M3 10.5L12 3L21 10.5V20C21 20.55 20.55 21 20 21H4C3.45 21 3 20.55 3 20V10.5Z" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+      <span id="toastMessage">20원 적립완료!</span>
+    </div>
+
+    <!-- ========== 가변 영역 (뷰포트 높이에 따라 줄어듦) ========== -->
+    <div class="flexible-area">
+      <!-- Tab Menu -->
+      <div class="tab-menu">
+        <div class="tab-item active">머니받기</div>
+        <div class="tab-item">머니미션</div>
+        <div class="tab-item">받은 머니 조회</div>
+      </div>
+
+      <!-- Money Summary -->
+      <div class="main-content">
+        <div class="money-summary">
+          <svg class="info-icon" viewBox="0 0 22 22" fill="none">
+            <circle cx="11" cy="11" r="10" stroke="#fff" stroke-width="1.5"/>
+            <path d="M11 15V11M11 7H11.01" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <div class="money-info">
+            <h2>이번달 받은 무신사 머니</h2>
+            <div class="money-amount">
+              <span id="totalMoney">0원</span>
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M9 18L15 12L9 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Badges -->
+        <div class="card-badges">
+          <div class="badge-container">
+            <span class="badge-label">보유카드</span>
+            <div class="badge-divider"></div>
+            <div class="badge-items">
+              <div class="badge-item">
+                <div class="badge-icon special"></div>
+                <span class="badge-count" id="specialCount">1</span>
+              </div>
+              <div class="badge-item">
+                <div class="badge-icon mileage"></div>
+                <span class="badge-count" id="mileageCount">2</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Background -->
+      <div class="bg-container">
+        <div class="bg-glow"></div>
+      </div>
+
+      <!-- Card Wrapper (클리핑 영역) -->
+      <div class="card-wrapper">
+        <!-- Card Area -->
+        <div class="card-area">
+          <!-- Empty State (미리 로드, 카드 뒤에 배치) -->
+          <div class="empty-state" id="emptyState">
+            <h3>No rewards left</h3>
+            <div class="empty-image">image</div>
+          </div>
+
+          <!-- Card Stack with Flip Cards -->
+          <div class="card-stack" id="cardStack">
+            <div class="flip-card" id="card1">
+              <div class="card-front"></div>
+              <div class="card-back">
+                <div class="result-content">
+                  <div class="result-badge">REWARD</div>
+                  <div class="result-info">
+                    <div class="result-amount">20원</div>
+                    <div class="result-text">상품 구매 시<br>바로 사용할 수 있어요</div>
+                  </div>
+                  <div class="result-image"></div>
+                </div>
+              </div>
+            </div>
+            <div class="flip-card special" id="card2" data-card-type="special">
+              <div class="card-front card-front-special"></div>
+              <div class="card-back card-back-special">
+                <div class="result-content">
+                  <div class="result-badge">SPECIAL</div>
+                  <div class="result-info">
+                    <div class="result-amount">3,000원</div>
+                    <div class="result-text">상품 구매 시<br>바로 사용할 수 있어요</div>
+                  </div>
+                  <div class="result-image"></div>
+                </div>
+              </div>
+            </div>
+            <div class="flip-card" id="card3">
+              <div class="card-front"></div>
+              <div class="card-back">
+                <div class="result-content">
+                  <div class="result-badge">REWARD</div>
+                  <div class="result-info">
+                    <div class="result-amount">20원</div>
+                    <div class="result-text">상품 구매 시<br>바로 사용할 수 있어요</div>
+                  </div>
+                  <div class="result-image"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Info Area (가변 패딩) -->
+        <div class="card-info-area">
+          <div class="card-info" id="cardInfo">
+            <div class="info-label" id="infoLabel">출석체크 리워드 | 11.04</div>
+            <div class="time-badge" id="timeBadge">12:24:55 남음</div>
+          </div>
+          <div class="empty-info" id="emptyInfo">열기 가능한 리워드 카드가 없어요</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 하단 고정 영역 ========== -->
+    <div class="bottom-fixed-area">
+      <div class="bottom-area">
+        <div class="bottom-buttons">
+          <button class="btn btn-primary" id="openAllBtn">카드 한번에 열기</button>
+        </div>
+        <div class="home-indicator">
+          <div class="home-indicator-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <h3>일부 리워드를 열지 못했어요.</h3>
+        <p>남은 리워드를 다시 열어주세요.</p>
+        <button class="btn-modal" onclick="closeModal()">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Demo Controls -->
+  <div class="demo-label">한번에 열기 시나리오 테스트</div>
+  <div class="demo-controls-external">
+    <button class="demo-btn active" onclick="setScenario('success')">성공 시나리오</button>
+    <button class="demo-btn" onclick="setScenario('partial')">일부 실패</button>
+    <button class="demo-btn" onclick="setOpenAllScenario('success')">한번에 열기 - 성공(스페셜 뒤)</button>
+    <button class="demo-btn" onclick="setOpenAllScenario('all-normal')">한번에 열기 - 모두 일반</button>
+    <button class="demo-btn" onclick="setOpenAllScenario('special-front')">한번에 열기 - 스페셜 카드가 맨 앞</button>
+    <button class="demo-btn" onclick="resetDemo()">초기화</button>
+  </div>
+
+  <script>
+    let currentScenario = 'success';
+    let isProcessing = false;
+    let specialCount = 1;
+    let mileageCount = 2;
+    let totalMoney = 0;
+    let currentCardIndex = 3; // 3장부터 시작 (뒤에서부터 오픈)
+
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    const cardStack = document.getElementById('cardStack');
+    const emptyState = document.getElementById('emptyState');
+    const cardInfo = document.getElementById('cardInfo');
+    const openAllBtn = document.getElementById('openAllBtn');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const specialCountEl = document.getElementById('specialCount');
+    const mileageCountEl = document.getElementById('mileageCount');
+    const totalMoneyEl = document.getElementById('totalMoney');
+    const timeBadge = document.getElementById('timeBadge');
+
+    // Timer
+    let timeLeft = 12 * 3600 + 24 * 60 + 55;
+    let timerInterval = null;
+    let isTimerStopped = false;
+    
+    timerInterval = setInterval(() => {
+      if (isTimerStopped) return; // 타이머 중지 시 업데이트 안함
+      timeLeft--;
+      if (timeLeft < 0) timeLeft = 24 * 3600;
+      const h = Math.floor(timeLeft / 3600);
+      const m = Math.floor((timeLeft % 3600) / 60);
+      const s = timeLeft % 60;
+      timeBadge.textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')} 남음`;
+    }, 1000);
+
+    // 초기 카드 수에 따라 버튼 표시 설정
+    function updateButtonState() {
+      const totalCards = specialCount + mileageCount;
+      if (totalCards <= 0) {
+        openAllBtn.textContent = '카드열기';
+        openAllBtn.disabled = true;
+        openAllBtn.onclick = null;
+      } else if (totalCards === 1) {
+        openAllBtn.textContent = '카드열기';
+        openAllBtn.disabled = false;
+        openAllBtn.onclick = openSingleCard;
+      } else {
+        openAllBtn.textContent = '카드 한번에 열기';
+        openAllBtn.disabled = false;
+        openAllBtn.onclick = openAllAtOnce;
+      }
+    }
+    
+    // 카드 앞면 클릭 시 플립 기능
+    function initCardFrontClick() {
+      const cardFronts = document.querySelectorAll('.card-front');
+      cardFronts.forEach((cardFront, index) => {
+        cardFront.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const flipCard = cardFront.closest('.flip-card');
+          // 맨 앞 카드만 클릭 가능 (z-index 3)
+          if (flipCard && flipCard.id === 'card' + currentCardIndex && !isProcessing && mileageCount > 0) {
+            openSingleCard();
+          }
+        });
+      });
+    }
+    
+    // 초기화
+    (function init() {
+      updateButtonState();
+      initCardFrontClick();
+    })();
+
+    function setScenario(scenario) {
+      currentScenario = scenario;
+      document.querySelectorAll('.demo-controls-external .demo-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    function setOpenAllScenario(scenario) {
+      // 모든 버튼 비활성화
+      document.querySelectorAll('.demo-controls-external .demo-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      // 카드 상태 초기화
+      currentCardIndex = 3;
+      totalMoney = 0;
+      isProcessing = false;
+      
+      // 모든 카드 초기화
+      for (let i = 1; i <= 3; i++) {
+        const card = document.getElementById('card' + i);
+        if (!card) continue;
+        
+        // 모든 클래스 제거
+        card.classList.remove('special', 'hidden', 'move-front', 'move-back', 'flipping', 'press-flip', 'merge', 'bounce', 'border-loading', 'merge-flip');
+        
+        // 스타일 초기화 및 기본 위치 설정
+        card.style.cssText = '';
+        card.style.visibility = 'visible';
+        card.style.opacity = '1';
+        
+        // 기본 위치로 복원 (CSS nth-child 규칙에 따라)
+        if (i === 1) {
+          // 맨 뒤 카드 (숨김)
+          card.style.transform = 'translate(-50%, -50%) translateX(6px) translateY(-5px) rotate(8deg)';
+          card.style.zIndex = '1';
+          card.style.opacity = '0';
+        } else if (i === 2) {
+          // 뒷장 (보임, 8도 기울기)
+          card.style.transform = 'translate(-50%, -50%) translateX(6px) translateY(-5px) rotate(8deg)';
+          card.style.zIndex = '2';
+          card.style.opacity = '1';
+        } else if (i === 3) {
+          // 맨 앞장 (보임, 0도)
+          card.style.transform = 'translate(-50%, -50%) translateX(0) translateY(0) rotate(0deg)';
+          card.style.zIndex = '3';
+          card.style.opacity = '1';
+        }
+        
+        // 카드 앞면 초기화
+        const cardFront = card.querySelector('.card-front');
+        if (cardFront) {
+          cardFront.classList.remove('card-front-special');
+        }
+        
+        // 카드 뒷면 초기화
+        const cardBack = card.querySelector('.card-back');
+        if (cardBack) {
+          cardBack.classList.remove('card-back-special');
+          cardBack.style.visibility = 'visible';
+          const badge = cardBack.querySelector('.result-badge');
+          const amount = cardBack.querySelector('.result-amount');
+          const text = cardBack.querySelector('.result-text');
+          if (badge) badge.textContent = 'REWARD';
+          if (amount) amount.textContent = '20원';
+          if (text) text.innerHTML = '상품 구매 시<br>바로 사용할 수 있어요';
+        }
+      }
+      
+      // 시나리오에 따라 카드 타입 설정
+      if (scenario === 'all-normal') {
+        // 모든 카드를 일반 카드로 설정
+        for (let i = 1; i <= 3; i++) {
+          const card = document.getElementById('card' + i);
+          if (card) {
+            card.classList.remove('special');
+            const cardFront = card.querySelector('.card-front');
+            const cardBack = card.querySelector('.card-back');
+            if (cardFront) cardFront.classList.remove('card-front-special');
+            if (cardBack) cardBack.classList.remove('card-back-special');
+          }
+        }
+        specialCount = 0;
+        mileageCount = 3;
+      } else if (scenario === 'special-front') {
+        // card3(맨 앞 카드)를 스페셜 카드로 설정
+        const card3 = document.getElementById('card3');
+        if (card3) {
+          card3.classList.add('special');
+          const cardFront = card3.querySelector('.card-front');
+          const cardBack = card3.querySelector('.card-back');
+          if (cardFront) cardFront.classList.add('card-front-special');
+          if (cardBack) {
+            cardBack.classList.add('card-back-special');
+            const badge = cardBack.querySelector('.result-badge');
+            const amount = cardBack.querySelector('.result-amount');
+            if (badge) badge.textContent = 'SPECIAL';
+            if (amount) amount.textContent = '3,000원';
+          }
+        }
+        // card1, card2는 일반 카드
+        const card1 = document.getElementById('card1');
+        const card2 = document.getElementById('card2');
+        if (card1) card1.classList.remove('special');
+        if (card2) card2.classList.remove('special');
+        specialCount = 1;
+        mileageCount = 2;
+      } else if (scenario === 'success') {
+        // 성공 시나리오: card2가 스페셜 카드 (기본 상태)
+        const card2 = document.getElementById('card2');
+        if (card2) {
+          card2.classList.add('special');
+          const cardFront = card2.querySelector('.card-front');
+          const cardBack = card2.querySelector('.card-back');
+          if (cardFront) cardFront.classList.add('card-front-special');
+          if (cardBack) {
+            cardBack.classList.add('card-back-special');
+            const badge = cardBack.querySelector('.result-badge');
+            const amount = cardBack.querySelector('.result-amount');
+            if (badge) badge.textContent = 'SPECIAL';
+            if (amount) amount.textContent = '3,000원';
+          }
+        }
+        // card1, card3는 일반 카드
+        const card1 = document.getElementById('card1');
+        const card3 = document.getElementById('card3');
+        if (card1) card1.classList.remove('special');
+        if (card3) card3.classList.remove('special');
+        specialCount = 1;
+        mileageCount = 2;
+      }
+      
+      // 카드 수 업데이트
+      updateCounts(specialCount, mileageCount);
+      
+      // 총 금액 초기화
+      totalMoneyEl.textContent = '0원';
+      
+      // 카드 스택 표시
+      cardStack.style.display = '';
+      
+      // Empty state 숨기기
+      emptyState.classList.remove('show', 'fade-in');
+      cardInfo.style.display = '';
+      document.getElementById('emptyInfo').classList.remove('show');
+      
+      // 버튼 상태 업데이트
+      updateButtonState();
+      
+      // 타이머 재시작
+      isTimerStopped = false;
+      const timeBadgeEl = document.getElementById('timeBadge');
+      timeBadgeEl.className = 'time-badge';
+      timeBadgeEl.textContent = '12:24:55 남음';
+      timeBadgeEl.onclick = null;
+    }
+
+    function showToast(message, duration = 2500, onComplete = null) {
+      toastMessage.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); if (onComplete) onComplete(); }, duration);
+    }
+
+    function showModal() {
+      modalOverlay.classList.add('show');
+    }
+
+    async function closeModal() {
+      modalOverlay.classList.remove('show');
+      
+      // 카드 앞면으로 돌리기
+      for (let i = 1; i <= 3; i++) {
+        const card = document.getElementById('card' + i);
+        if (card) {
+          card.classList.remove('merge-flip', 'merge');
+          card.style.transition = 'transform 0.6s ease-out';
+          card.style.transform = 'translate(-50%, -50%) translateY(0) rotateY(0deg)';
+        }
+      }
+
+      await new Promise(r => setTimeout(r, 700));
+      
+      // 원래 위치로 복구
+      for (let i = 1; i <= 3; i++) {
+        const card = document.getElementById('card' + i);
+        if (card) {
+          card.style.cssText = '';
+        }
+      }
+      
+      // empty state 숨기기
+      emptyState.classList.remove('show');
+      
+      // 버튼 상태 업데이트
+      updateButtonState();
+    }
+
+    function updateCounts(special, mileage) {
+      specialCount = special;
+      mileageCount = mileage;
+      specialCountEl.textContent = special;
+      mileageCountEl.textContent = mileage;
+      updateButtonState();
+    }
+
+    function updateTotalMoney(amount) {
+      const startValue = totalMoney;
+      const endValue = amount;
+      const duration = 1200; // 더 긴 애니메이션 시간
+      const startTime = performance.now();
+      
+      // easeOutQuart - 더 부드러운 감속
+      function easeOutQuart(t) {
+        return 1 - Math.pow(1 - t, 4);
+      }
+      
+      function animate(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeProgress = easeOutQuart(progress);
+        
+        const currentValue = Math.round(startValue + (endValue - startValue) * easeProgress);
+        totalMoneyEl.textContent = currentValue.toLocaleString() + '원';
+        
+        // 숫자 변경 시 살짝 스케일 효과
+        if (progress < 0.3) {
+          const scale = 1 + (0.08 * (1 - progress / 0.3));
+          totalMoneyEl.style.transform = `scale(${scale})`;
+        } else {
+          totalMoneyEl.style.transform = 'scale(1)';
+        }
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          totalMoney = amount;
+          totalMoneyEl.style.transform = 'scale(1)';
+        }
+      }
+      
+      requestAnimationFrame(animate);
+    }
+
+    // 카드 1장 오픈 (플립 → 위로 사라짐 → 다음 카드 앞으로)
+    async function openSingleCard() {
+      const totalCards = specialCount + mileageCount;
+      if (isProcessing || totalCards <= 0) return;
+      
+      isProcessing = true;
+      openAllBtn.disabled = true;
+      
+      const currentCard = document.getElementById('card' + currentCardIndex);
+      const nextCard = currentCardIndex > 1 ? document.getElementById('card' + (currentCardIndex - 1)) : null;
+      const waitingCard = currentCardIndex > 2 ? document.getElementById('card' + (currentCardIndex - 2)) : null;
+      
+      // 현재 카드의 이전 클래스 제거 및 초기 위치 설정
+      currentCard.classList.remove('move-front', 'move-back', 'press-flip');
+      currentCard.style.cssText = '';
+      
+      // 맨 앞 카드 위치로 설정
+      currentCard.style.transform = 'translate(-50%, -50%) translateX(0) translateY(0) rotate(0deg)';
+      currentCard.style.zIndex = '3';
+      currentCard.style.opacity = '1';
+      
+      // 1. 탭 애니메이션 (작아졌다가 커지면서 플립)
+      currentCard.classList.add('press-flip');
+      
+      // 적립 처리 - 카드 플립 시작과 동시에 토스트 표시
+      const isSpecial = currentCard.classList.contains('special');
+      const earnedMoney = isSpecial ? 3000 : 20;
+      const newTotal = totalMoney + earnedMoney;
+      showToast(`${earnedMoney.toLocaleString()}원 적립완료! 🎉`, 1500, () => updateTotalMoney(newTotal));
+      
+      // press-flip 애니메이션 완료 대기 (0.75s)
+      await new Promise(r => setTimeout(r, 750));
+      
+      // press-flip 애니메이션 완료 후 상태 고정
+      currentCard.classList.remove('press-flip');
+      currentCard.style.transform = 'translate(-50%, -50%) translateY(0) rotateY(180deg)';
+      currentCard.style.zIndex = '10';
+
+      // 카드 수 감소 (스페셜/일반 구분)
+      if (isSpecial && specialCount > 0) {
+        updateCounts(specialCount - 1, mileageCount);
+      } else if (!isSpecial && mileageCount > 0) {
+        updateCounts(specialCount, mileageCount - 1);
+      }
+
+      // 플립된 카드 2초 동안 화면에 표시
+      await new Promise(r => setTimeout(r, 2000));
+
+      // ★ 마지막 카드인 경우 empty state 미리 표시 (카드 뒤에 배치되어 아직 안보임)
+      if ((specialCount + mileageCount) <= 0 && currentScenario === 'success') {
+        emptyState.classList.add('show');
+        cardInfo.style.display = 'none';
+        document.getElementById('emptyInfo').classList.add('show');
+      }
+
+      // 2. 플립된 카드 위로 날아가며 사라짐
+      currentCard.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 1, 1)';
+      currentCard.style.transform = 'translate(-50%, -50%) translateY(-600px) rotateY(180deg)';
+
+      // 3. 다음 카드가 앞으로 나옴 (각도 0도)
+      if (nextCard) {
+        nextCard.classList.remove('move-back');
+        nextCard.classList.add('move-front');
+      }
+
+      // 4. 대기 중인 카드가 뒷장 위치로 이동
+      if (waitingCard) {
+        waitingCard.classList.add('move-back');
+      }
+
+      await new Promise(r => setTimeout(r, 700));
+      
+      // 현재 카드 완전히 숨김
+      currentCard.classList.add('hidden');
+      currentCard.style.visibility = 'hidden';
+
+      currentCardIndex--;
+
+      // 모든 카드 오픈 완료
+      if ((specialCount + mileageCount) <= 0) {
+        await new Promise(r => setTimeout(r, 300));
+        
+        if (currentScenario === 'success') {
+          // 카드 스택 숨김
+          cardStack.style.display = 'none';
+          emptyState.classList.add('show', 'fade-in');
+          cardInfo.style.display = 'none';
+          document.getElementById('emptyInfo').classList.add('show');
+          openAllBtn.textContent = '카드열기';
+          openAllBtn.disabled = true;
+        } else {
+          // 일부 실패 시나리오
+          showModal();
+        }
+      }
+
+      // 버튼 상태 업데이트
+      updateButtonState();
+      isProcessing = false;
+    }
+
+    // 카드 한번에 열기 (모든 카드 합쳐서 뒤집기)
+    let pendingCardCount = 0; // 한번에 열기 시 저장할 카드 수
+    
+    async function openAllAtOnce() {
+      const totalCards = specialCount + mileageCount;
+      if (isProcessing || totalCards <= 0) return;
+      
+      isProcessing = true;
+      pendingCardCount = currentCardIndex; // 현재 카드 수 저장
+      
+      // 카드열기 버튼 상태 변경: 텍스트 + 스피너
+      openAllBtn.classList.add('loading');
+      openAllBtn.innerHTML = '카드를 한번에 열고있어요 <span class="spinner"></span>';
+      openAllBtn.disabled = true;
+
+      // 1. 맨 앞 카드 찾기 (move-front 클래스를 가진 카드 또는 currentCardIndex 카드)
+      let frontCard = null;
+      let frontCardIndex = currentCardIndex;
+      
+      // move-front 클래스를 가진 카드 찾기 (카드 한 장 열었을 때 앞으로 나온 카드)
+      for (let i = currentCardIndex; i >= 1; i--) {
+        const card = document.getElementById('card' + i);
+        if (card && !card.classList.contains('hidden')) {
+          if (card.classList.contains('move-front')) {
+            frontCard = card;
+            frontCardIndex = i;
+            break;
+          }
+          // move-front가 없으면 currentCardIndex 카드가 맨 앞
+          if (i === currentCardIndex) {
+            frontCard = card;
+            frontCardIndex = i;
+            break;
+          }
+        }
+      }
+      
+      // 맨 앞 카드가 없으면 currentCardIndex 카드를 맨 앞으로
+      if (!frontCard) {
+        frontCard = document.getElementById('card' + currentCardIndex);
+        frontCardIndex = currentCardIndex;
+      }
+      
+      // 맨 앞 카드의 현재 위치 가져오기
+      // move-front 클래스가 있으면 그 위치, 없으면 기본 앞면 위치
+      let targetX = '0';
+      let targetY = '0';
+      let targetRotate = '0deg';
+      
+      if (frontCard) {
+        // move-front 클래스가 있으면 그 위치 사용
+        if (frontCard.classList.contains('move-front')) {
+          // move-front는 translateX(0) translateY(0) rotate(0deg)
+          targetX = '0';
+          targetY = '0';
+          targetRotate = '0deg';
+        } else {
+          // 현재 transform에서 값 추출
+          const currentTransform = frontCard.style.transform || '';
+          const xMatch = currentTransform.match(/translateX\(([^)]+)\)/);
+          const yMatch = currentTransform.match(/translateY\(([^)]+)\)/);
+          const rotateMatch = currentTransform.match(/rotate\(([^)]+deg)\)/);
+          
+          if (xMatch) targetX = xMatch[1];
+          if (yMatch) targetY = yMatch[1];
+          if (rotateMatch) targetRotate = rotateMatch[1];
+        }
+      }
+      
+      const finalTargetTransform = `translate(-50%, -50%) translateX(${targetX}) translateY(${targetY}) rotate(${targetRotate}) rotateY(0deg)`;
+
+      // 2. 모든 카드를 맨 앞 카드 위치로 합치기
+      for (let i = 1; i <= currentCardIndex; i++) {
+        const card = document.getElementById('card' + i);
+        if (!card) continue;
+        
+        // 모든 상태 초기화
+        card.classList.remove('hidden', 'merge', 'bounce', 'border-loading', 'press-flip', 'flipping', 'merge-flip', 'move-front', 'move-back');
+        
+        // 카드 뒷면 초기화 (스페셜 카드는 클래스 유지)
+        const cardBack = card.querySelector('.card-back');
+        if (cardBack) {
+          cardBack.style.visibility = 'visible';
+          // 스페셜 카드가 아닌 경우에만 card-back-special 클래스 제거
+          if (!card.classList.contains('special')) {
+            cardBack.classList.remove('card-back-special');
+          }
+        }
+        
+        // 카드 상태 설정 - 앞면으로, 맨 앞 카드 위치로 합치기
+        card.style.visibility = 'visible';
+        card.style.opacity = '1';
+        card.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+        card.style.transform = finalTargetTransform;
+        
+        // z-index 설정: 맨 앞 카드가 가장 높고, 스페셜 카드는 일반 카드보다 높게
+        if (i === frontCardIndex) {
+          card.style.zIndex = String(10); // 맨 앞 카드가 가장 높음
+        } else if (card.classList.contains('special')) {
+          card.style.zIndex = String(5); // 스페셜 카드는 일반 카드보다 높게
+        } else {
+          card.style.zIndex = String(3 + (currentCardIndex - i)); // 일반 카드는 순서대로
+        }
+        
+        card.classList.add('merge');
+      }
+
+      // 카드 합쳐지는 애니메이션 완료 대기
+      await new Promise(r => setTimeout(r, 500));
+
+      // 2. merge 클래스 제거하고 바운스 애니메이션 준비 (맨 앞 카드만)
+      // 맨 앞 카드만 보더라이트와 바운스 애니메이션 적용 (일반 카드처럼)
+      const frontCardElement = document.getElementById('card' + frontCardIndex);
+      
+      if (frontCardElement) {
+        // merge 클래스 제거
+        frontCardElement.classList.remove('merge');
+        
+        // transform에서 translateX, translateY, rotate 값 추출
+        const xMatch = finalTargetTransform.match(/translateX\(([^)]+)\)/);
+        const yMatch = finalTargetTransform.match(/translateY\(([^)]+)\)/);
+        const rotateMatch = finalTargetTransform.match(/rotate\(([^)]+)\)/);
+        const translateX = xMatch ? xMatch[1] : '0';
+        const translateY = yMatch ? yMatch[1] : '0';
+        const rotate = rotateMatch ? rotateMatch[1] : '0deg';
+        
+        // 바운스 애니메이션을 위한 동적 keyframes 생성
+        const animationName = `bounce-front-${Date.now()}`;
+        const style = document.createElement('style');
+        style.setAttribute('data-animation', animationName);
+        style.textContent = `
+          @keyframes ${animationName} {
+            0%, 100% { 
+              transform: translate(-50%, -50%) translateX(${translateX}) translateY(${translateY}) rotate(${rotate}) rotateY(0deg) scale(1); 
+            }
+            50% { 
+              transform: translate(-50%, -50%) translateX(${translateX}) translateY(${translateY}) rotate(${rotate}) rotateY(0deg) scale(1.025); 
+            }
+          }
+        `;
+        document.head.appendChild(style);
+        frontCardElement.dataset.bounceAnimation = animationName;
+        
+        // transform을 인라인 스타일로 설정
+        frontCardElement.style.transform = finalTargetTransform;
+        // 동적 애니메이션 적용
+        frontCardElement.style.animation = `${animationName} 1s cubic-bezier(0.45, 0, 0.55, 1) 2`;
+        frontCardElement.style.animationFillMode = 'both';
+        
+        // 보더 라이트 추가 (모든 경우)
+        frontCardElement.classList.add('border-loading');
+      }
+      
+      // 뒤에 있는 카드들은 merge 클래스만 제거하고 위치 유지 (보이지 않음)
+      for (let i = 1; i <= currentCardIndex; i++) {
+        if (i === frontCardIndex) continue; // 맨 앞 카드는 이미 처리됨
+        
+        const card = document.getElementById('card' + i);
+        if (!card) continue;
+        
+        // merge 클래스 제거하지만 transform은 유지
+        card.classList.remove('merge');
+        card.style.transform = finalTargetTransform;
+        // 뒤 카드는 보이지 않도록 (맨 앞 카드가 덮고 있음)
+      }
+
+      // 2초 동안 바운스 애니메이션 (1s × 2번)
+      await new Promise(r => setTimeout(r, 2000));
+
+      // 바운스 애니메이션 제거
+      if (frontCardElement) {
+        // 동적 애니메이션 제거
+        const animationName = frontCardElement.dataset.bounceAnimation;
+        if (animationName) {
+          frontCardElement.style.animation = '';
+          frontCardElement.style.animationFillMode = '';
+          // 동적으로 생성한 style 태그 제거
+          const styleTag = document.querySelector(`style[data-animation="${animationName}"]`);
+          if (styleTag) {
+            styleTag.remove();
+          }
+          delete frontCardElement.dataset.bounceAnimation;
+        }
+        
+        // 바운스 제거 후에도 위치 유지
+        frontCardElement.style.transform = finalTargetTransform;
+      }
+      
+      // 스페셜 카드가 맨 앞일 때는 약간의 대기 시간을 주어 부드럽게 전환
+      const isSpecialFront = frontCardElement && frontCardElement.classList.contains('special');
+      if (isSpecialFront) {
+        // 보더라인 제거
+        frontCardElement.classList.remove('border-loading');
+        // 바운스 애니메이션 종료 후 약간의 안정화 시간
+        await new Promise(r => setTimeout(r, 200));
+      } else {
+        // 일반 카드인 경우 보더라인 제거
+        if (frontCardElement) {
+          frontCardElement.classList.remove('border-loading');
+        }
+      }
+
+      // 적립 금액 계산
+      let totalEarned = 0;
+      for (let i = 1; i <= currentCardIndex; i++) {
+        const card = document.getElementById('card' + i);
+        if (card && !card.classList.contains('hidden')) {
+          totalEarned += card.classList.contains('special') ? 3000 : 20;
+        }
+      }
+
+      // 맨 앞 카드의 뒷면에 합산 금액 표시 (1000원 이상이면 스페셜 뒷면, 미만이면 일반 뒷면)
+      const actualFrontCard = document.getElementById('card' + frontCardIndex);
+      if (actualFrontCard) {
+        const frontCardBack = actualFrontCard.querySelector('.card-back');
+        if (frontCardBack) {
+          // 합산 금액에 따라 뒷면 스타일 결정
+          if (totalEarned >= 1000) {
+            frontCardBack.classList.add('card-back-special');
+          } else {
+            frontCardBack.classList.remove('card-back-special');
+          }
+          const badge = frontCardBack.querySelector('.result-badge');
+          const amount = frontCardBack.querySelector('.result-amount');
+          const text = frontCardBack.querySelector('.result-text');
+          if (badge) badge.textContent = 'TOTAL REWARD';
+          if (amount) amount.textContent = totalEarned.toLocaleString() + '원';
+          if (text) text.innerHTML = `상품 구매 시<br>바로 사용 가능해요`;
+        }
+      }
+
+      // 나머지 카드들의 뒷면 숨기기 (맨 앞 카드만 보이도록)
+      for (let i = 1; i <= currentCardIndex; i++) {
+        if (i === frontCardIndex) continue; // 맨 앞 카드는 제외
+        const card = document.getElementById('card' + i);
+        if (card) {
+          const cardBack = card.querySelector('.card-back');
+          if (cardBack) {
+            cardBack.style.visibility = 'hidden';
+          }
+          // 뒤에 있는 카드들은 플립할 때 보이지 않도록 숨김
+          card.style.opacity = '0';
+        }
+      }
+
+      // 4. 합쳐진 카드 한번에 플립 - 맨 앞 카드 위치 기준
+      // 모든 카드가 플립되지만 실제로는 맨 앞 카드만 보임
+      for (let i = 1; i <= currentCardIndex; i++) {
+        const card = document.getElementById('card' + i);
+        if (!card) continue;
+        
+        // 스페셜 카드가 맨 앞일 때는 더 부드러운 플립 전환 (더 길게)
+        const isSpecialCard = card.classList.contains('special');
+        const flipDuration = isSpecialCard ? '1.0s' : '0.7s';
+        const flipEasing = isSpecialCard ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.4, 0, 0.2, 1)';
+        
+        // 맨 앞 카드만 보이도록 z-index 설정
+        if (i === frontCardIndex) {
+          // 맨 앞 카드는 가장 높은 z-index
+          card.style.zIndex = '10';
+        } else {
+          // 뒤에 있는 카드들은 낮은 z-index로 숨김
+          card.style.zIndex = '1';
+        }
+        
+        // 모든 카드 플립 (맨 앞 카드만 보이지만 모든 카드가 플립됨)
+        // transition을 먼저 설정
+        card.style.transition = `transform ${flipDuration} ${flipEasing}`;
+      }
+      
+      // transition 설정 후 약간의 지연을 두고 transform을 적용하여 애니메이션이 재생되도록
+      await new Promise(r => setTimeout(r, 10));
+      
+      for (let i = 1; i <= currentCardIndex; i++) {
+        const card = document.getElementById('card' + i);
+        if (!card) continue;
+        
+        // 맨 앞 카드의 위치를 유지하면서 rotateY만 180도로
+        const flipTransform = finalTargetTransform.replace('rotateY(0deg)', 'rotateY(180deg)');
+        card.style.transform = flipTransform;
+      }
+
+      // 적립 처리 - 카드 플립 시작과 동시에 토스트 표시
+      const newTotal = totalMoney + totalEarned;
+      showToast(`${totalEarned.toLocaleString()}원 적립완료! 🎉`, 1500, () => updateTotalMoney(newTotal));
+
+      await new Promise(r => setTimeout(r, 800));
+
+      // 일부 실패 케이스인 경우 1장 남기기
+      if (currentScenario === 'partial') {
+        // 1장 남기기
+        updateCounts(0, 1);
+      } else {
+        // 카드 수 0으로 (모든 카드 오픈)
+        updateCounts(0, 0);
+      }
+      
+      // 버튼을 "확인"으로 변경하고 활성화
+      openAllBtn.classList.remove('loading');
+      openAllBtn.innerHTML = '확인';
+      openAllBtn.disabled = false;
+      openAllBtn.onclick = confirmAllCardsOpened;
+      
+      // 카드 정보 텍스트 변경: "총 N개 리워드 카드 열었어요"
+      document.getElementById('infoLabel').textContent = `총 ${pendingCardCount}개 리워드 카드 열었어요`;
+      
+      // 타이머 중지 및 "상세내역 보기" 버튼으로 변경
+      isTimerStopped = true;
+      const timeBadgeEl = document.getElementById('timeBadge');
+      timeBadgeEl.className = 'btn-tertiary';
+      timeBadgeEl.textContent = '상세내역 보기';
+      timeBadgeEl.onclick = () => { alert('상세내역 페이지로 이동'); };
+      
+      isProcessing = false;
+    }
+    
+    async function confirmAllCardsOpened() {
+      if (isProcessing) return;
+      isProcessing = true;
+      
+      openAllBtn.disabled = true;
+      
+      if (currentScenario === 'success') {
+        // ★ 카드가 사라지기 전에 empty state를 미리 보여줌 (카드 뒤에 있으므로 아직 안보임)
+        emptyState.classList.add('show');
+        cardInfo.style.display = 'none';
+        document.getElementById('emptyInfo').classList.add('show');
+        
+        // 위로 날아가는 애니메이션 (화면 밖으로) - 바로 실행
+        for (let i = 1; i <= pendingCardCount; i++) {
+          const card = document.getElementById('card' + i);
+          card.classList.remove('merge-flip');
+          card.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 1, 1)';
+          card.style.transform = 'translate(-50%, -50%) translateY(-600px) rotateY(180deg)';
+          card.style.zIndex = '10';
+        }
+
+        await new Promise(r => setTimeout(r, 700));
+        
+        // 애니메이션 후 완전히 숨김
+        for (let i = 1; i <= pendingCardCount; i++) {
+          const card = document.getElementById('card' + i);
+          card.style.visibility = 'hidden';
+        }
+
+        // 완료 처리
+        openAllBtn.textContent = '카드열기';
+        // 카드 스택 숨김
+        cardStack.style.display = 'none';
+        openAllBtn.disabled = true;
+        openAllBtn.onclick = null;
+      } else {
+        // 일부 실패: 1장만 남기고 나머지는 즉시 숨김 (애니메이션 없음)
+        for (let i = 1; i < pendingCardCount; i++) {
+          const card = document.getElementById('card' + i);
+          if (card) {
+            card.style.visibility = 'hidden';
+            card.style.opacity = '0';
+          }
+        }
+        
+        // 마지막 카드만 보이도록 설정 (앞면으로 즉시 복원, 애니메이션 없음)
+        const lastCard = document.getElementById('card' + pendingCardCount);
+        if (lastCard) {
+          // 애니메이션 없이 즉시 앞면으로 복원
+          lastCard.style.transition = 'none';
+          lastCard.style.transform = 'translate(-50%, -50%) translateX(0) translateY(0) rotate(0deg) rotateY(0deg)';
+          lastCard.style.zIndex = '3';
+          lastCard.style.opacity = '1';
+          lastCard.style.visibility = 'visible';
+          
+          // 뒷면 초기화
+          const cardBack = lastCard.querySelector('.card-back');
+          if (cardBack) {
+            cardBack.style.visibility = 'visible';
+            cardBack.classList.remove('card-back-special');
+            const badge = cardBack.querySelector('.result-badge');
+            const amount = cardBack.querySelector('.result-amount');
+            const text = cardBack.querySelector('.result-text');
+            if (badge) badge.textContent = 'REWARD';
+            if (amount) amount.textContent = '20원';
+            if (text) text.innerHTML = '상품 구매 시<br>바로 사용할 수 있어요';
+          }
+          
+          // 앞면 초기화
+          const cardFront = lastCard.querySelector('.card-front');
+          if (cardFront) {
+            cardFront.classList.remove('card-front-special');
+            lastCard.classList.remove('special');
+          }
+        }
+        
+        // 카드 수 1장 남김
+        updateCounts(0, 1);
+        currentCardIndex = pendingCardCount;
+        
+        // Empty state 숨기기
+        emptyState.classList.remove('show', 'fade-in');
+        document.getElementById('emptyInfo').classList.remove('show');
+        cardInfo.style.display = '';
+        
+        // 카드 정보 텍스트 복원
+        document.getElementById('infoLabel').textContent = '출석체크 리워드 | 11.04';
+        const timeBadgeEl = document.getElementById('timeBadge');
+        timeBadgeEl.className = 'time-badge';
+        timeBadgeEl.textContent = '12:24:55 남음';
+        timeBadgeEl.onclick = null;
+        isTimerStopped = false;
+        
+        // 버튼 상태 업데이트
+        openAllBtn.textContent = '카드열기';
+        openAllBtn.disabled = false;
+        openAllBtn.onclick = openSingleCard;
+        
+        // 알럿 표시
+        showModal();
+      }
+
+      isProcessing = false;
+    }
+
+    function resetDemo() {
+      location.reload();
+    }
+  </script>
+</body>
+</html>
